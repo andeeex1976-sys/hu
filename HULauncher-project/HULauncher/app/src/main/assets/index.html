@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HU Launcher</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+
+:root{--bg:#0b1a33;--fg:#fff;--mut:#9fb3d1;--acc:#ffb020;--card:rgba(10,20,40,.62);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1a33}}
+:root[data-theme="dark"]{--bg:#0b1a33}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#05080f;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg)}
+body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+#screen{position:relative;width:min(100vw,calc(100vh*16/9));aspect-ratio:16/9;background:var(--bg);overflow:hidden;border-radius:1.2vw;container-type:inline-size}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.bar{position:absolute;top:0;left:0;right:0;height:5.5cqw;display:flex;align-items:center;justify-content:space-between;padding:0 2.5cqw;font-size:2cqw;color:#dfe8f7;background:linear-gradient(#000a,#0000)}
+.bar .nav span{margin-right:3cqw}
+.left{position:absolute;left:3cqw;top:7cqw}
+.clock{font-size:11cqw;font-weight:600;line-height:1;letter-spacing:-.2cqw;text-shadow:0 .2cqw 1cqw #000a}
+.date{font-size:2.4cqw;margin-top:1cqw;font-weight:500;text-shadow:0 0 .8cqw #000}
+.speed{font-size:2.4cqw;margin-top:.6cqw;font-weight:600}
+.wx{position:absolute;left:3cqw;bottom:16cqw}
+.wx .t{font-size:4.2cqw;font-weight:500;text-shadow:0 0 1cqw #000}
+.wx .t small{font-size:2.4cqw;font-weight:400;margin-left:.8cqw}
+.wx .loc{font-size:2.2cqw;color:#8fc4ff;margin:.2cqw 0 1.4cqw}
+.pray{display:flex;gap:2.6cqw}
+.pray div{font-size:1.9cqw;color:#dfe8f7;text-shadow:0 0 .8cqw #000}
+.pray b{display:block;font-size:2.8cqw;font-weight:600;color:#fff}
+.pray .next,.pray .next b{color:var(--acc)}
+.media{position:absolute;left:2.5cqw;bottom:2.5cqw;display:flex;align-items:center;gap:2cqw;background:var(--card);backdrop-filter:blur(1cqw);padding:1.2cqw 2.4cqw 1.2cqw 1.2cqw;border-radius:2.2cqw;min-width:38cqw}
+.media .ic{width:7cqw;height:7cqw;border-radius:1.8cqw;background:#1da1f2;display:grid;place-items:center;font-size:4cqw}
+.media .tx{flex:1;min-width:0;font-size:2.2cqw}.media .tx b,.media .tx small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.media .tx small{color:var(--mut);font-size:1.8cqw}
+.media button{background:none;border:0;color:#fff;font-size:3cqw;cursor:pointer}
+.media button.p{background:#fff;color:#000;width:6cqw;height:6cqw;border-radius:50%;font-size:2.6cqw}
+.dock{position:absolute;right:2cqw;bottom:2.5cqw;display:flex;gap:.5cqw;background:var(--card);padding:.8cqw 1.2cqw;border-radius:1.8cqw;backdrop-filter:blur(1cqw)}
+.app{text-align:center;font-size:1.15cqw;color:#dfe8f7;cursor:pointer;width:6cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app i{display:grid;place-items:center;width:4cqw;height:4cqw;margin:0 auto .3cqw;border-radius:1.1cqw;font-style:normal;font-size:2.3cqw}
+.app:active i{transform:scale(.92)}
+.me{position:absolute;left:67%;top:50%;width:3cqw;height:3cqw;border-radius:50%;background:#ffd23f55;display:grid;place-items:center}
+.me::after{content:"";width:1.3cqw;height:1.3cqw;border-radius:50%;border:.45cqw solid #ffd23f;background:#0b1a33}
+.app{position:relative}.app .x{position:absolute;top:-.6cqw;right:.2cqw;width:2cqw;height:2cqw;border-radius:50%;background:#e5484d;color:#fff;font-size:1.6cqw;line-height:2cqw;text-decoration:none;z-index:2}
+.app.add i{background:#ffffff22;border:.2cqw dashed #fff9}
+.edb{position:absolute;right:2cqw;bottom:16.2cqw;border:0;border-radius:2cqw;padding:.6cqw 1.6cqw;font-size:1.6cqw;background:var(--card);color:#dfe8f7;cursor:pointer;backdrop-filter:blur(1cqw)}
+.pick{position:absolute;right:2cqw;bottom:20cqw;display:none;flex-wrap:wrap;gap:.6cqw;width:30cqw;background:var(--card);padding:1.2cqw;border-radius:1.8cqw;backdrop-filter:blur(1cqw);z-index:3}
+.pick.on{display:flex}.pick .app{width:6.4cqw}
+.mx{position:absolute;right:17cqw;bottom:16.2cqw;display:none;align-items:center;gap:.8cqw;border-radius:2cqw;padding:.3cqw 1cqw;font-size:1.6cqw;background:var(--card);color:#dfe8f7;backdrop-filter:blur(1cqw)}
+.mx button{width:2.6cqw;height:2.6cqw;border:0;border-radius:50%;background:#ffffff26;color:#fff;font-size:1.8cqw;cursor:pointer}
+
+#screen{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0}
+#lf{position:absolute;inset:0;z-index:0;background:transparent}.leaflet-container{background:#0e2244}
+.attr{position:absolute;right:1cqw;top:5.6cqw;font-size:1cqw;color:#9fb3d1aa}
+.app i{overflow:hidden}.app i img{width:100%;height:100%}
+#drw{position:absolute;left:0;right:0;top:5.5cqw;bottom:0;background:#0b1a33f0;display:none;overflow:auto;padding:2cqw;z-index:5}
+.gr{display:grid;grid-template-columns:repeat(8,1fr);gap:1.5cqw}.gr .app{width:auto;font-size:1.5cqw}.gr .app i{width:6.5cqw;height:6.5cqw;border-radius:1.6cqw}
+</style></head>
+<body>
+<div id="screen">
+  <canvas id="map"></canvas><div id="lf"></div><div class="me"></div>
+  <div class="attr">© OpenStreetMap · © CARTO</div>
+  <div class="bar"><div class="nav"></div><div>📍 📞 📶 <span id="tb"></span></div></div>
+  <div class="left"><div class="clock" id="clock">--:--</div><div class="date" id="date"></div><div class="speed" id="spd">0 km/h</div></div>
+  <div class="wx"><div class="t" id="wt">--°</div><div class="loc" id="wl">Mencari lokasi…</div><div class="pray" id="pray"></div></div>
+  <div class="media"><div class="ic" id="mi">🎵</div><div class="tx"><b id="mt">Tidak ada musik</b><small id="ms">Putar musik di aplikasi apa pun</small></div><button id="pv">⏮</button><button class="p" id="pp">▶</button><button id="nx">⏭</button></div>
+  <div class="dock" id="dock"></div>
+  <button class="edb" id="edb"></button>
+  <div class="mx" id="mx"><button id="mm">−</button><span id="mv"></span><button id="mp">+</button></div>
+  <div id="drw"><div class="gr" id="gr"></div></div>
+</div>
+<script>
+// Peta gelap (dekoratif; di APK diganti peta live)
+(function(){
+  var c=document.getElementById('map'),W=1600,H=900;c.width=W;c.height=H;var x=c.getContext('2d');
+  var s=7;function r(){s=(s*16807)%2147483647;return s/2147483647}
+  x.fillStyle='#0e2244';x.fillRect(0,0,W,H);
+  x.strokeStyle='#8fb8e8';
+  for(var i=0;i<260;i++){var px=r()*W,py=r()*H,a=r()<.5?0:Math.PI/2+(r()-.5)*.5;a+= (r()-.5)*.4;var l=60+r()*220;
+    x.globalAlpha=.25+r()*.4;x.lineWidth=.8;x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.cos(a)*l,py+Math.sin(a)*l);x.stroke()}
+  x.globalAlpha=.7;x.lineWidth=2.2;x.strokeStyle='#b9d7ff';
+  [[0,200,W,420],[300,0,520,H],[1150,0,1000,H],[0,640,900,560]].forEach(function(p){x.beginPath();x.moveTo(p[0],p[1]);x.quadraticCurveTo((p[0]+p[2])/2+60,(p[1]+p[3])/2-60,p[2],p[3]);x.stroke()});
+  var g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#0b1a33dd');g.addColorStop(.5,'#0b1a3300');g.addColorStop(1,'#0b1a3333');x.globalAlpha=1;x.fillStyle=g;x.fillRect(0,0,W,H);
+})();
+var $=function(i){return document.getElementById(i)},A=window.Android;
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+// ---- jam, tanggal, waktu sholat ----
+var P=[['Subuh','--:--'],['Dzuhur','--:--'],['Ashar','--:--'],['Maghrib','--:--'],['Isya','--:--']];
+function tick(){var d=new Date(),h=d.getHours(),m=d.getMinutes(),mm=String(m).padStart(2,'0');
+  $('clock').textContent=(h%12||12)+':'+mm;$('tb').textContent=(h%12||12)+':'+mm+' '+(h<12?'AM':'PM');
+  $('date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var now=h*60+m,ni=P.findIndex(function(p){var t=p[1].split(':');return +t[0]*60+ +t[1]>now});if(ni<0)ni=0;
+  $('pray').innerHTML=P.map(function(p,i){return '<div class="'+(i===ni?'next':'')+'">'+p[0]+'<b>'+p[1]+'</b></div>'}).join('')}
+tick();setInterval(tick,10000);
+// ---- peta live (Leaflet + tile gelap), kecepatan, cuaca ----
+var map=null,dot=null;
+try{map=L.map('lf',{zoomControl:false,attributionControl:false}).setView([-6.2,106.8],17);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',{maxZoom:19,subdomains:'abcd'}).addTo(map);
+  dot=L.circleMarker([0,0],{radius:9,color:'#ffd23f',fillColor:'#0b1a33',fillOpacity:1,weight:4}).addTo(map);
+  document.querySelector('.me').style.display='none'}catch(e){map=null}
+var wxT=0;
+var WX={0:['☀️','Cerah'],1:['🌤️','Cerah berawan'],2:['⛅','Berawan'],3:['☁️','Mendung'],45:['🌫️','Kabut'],48:['🌫️','Kabut'],51:['🌦️','Gerimis'],53:['🌦️','Gerimis'],55:['🌦️','Gerimis'],61:['🌧️','Hujan'],63:['🌧️','Hujan'],65:['🌧️','Hujan lebat'],80:['🌧️','Hujan'],81:['🌧️','Hujan'],82:['🌧️','Hujan lebat'],95:['⛈️','Badai petir'],96:['⛈️','Badai petir'],99:['⛈️','Badai petir']};
+function onLoc(la,lo,sp){
+  if(sp>=0)$('spd').textContent=(sp<3?0:Math.round(sp))+' km/h';
+  if(map){var p=[la,lo];dot.setLatLng(p);map.setView(p,map.getZoom(),{animate:false});map.panBy([-$('screen').clientWidth*.17,0],{animate:false})}
+  var n=Date.now();if(n-wxT<900000)return;wxT=n;
+  try{var pl=A.place(la,lo);$('wl').textContent=pl||'Lokasi saya'}catch(e){}
+  fetch('https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=temperature_2m,weather_code').then(function(r){return r.json()}).then(function(d){
+    var w=WX[d.current.weather_code]||['🌡️','Cuaca'];$('wt').innerHTML=w[0]+' '+Math.round(d.current.temperature_2m)+'° <small>'+w[1]+'</small>'}).catch(function(){wxT=0});
+  fetch('https://api.aladhan.com/v1/timings?latitude='+la+'&longitude='+lo+'&method=20').then(function(r){return r.json()}).then(function(d){
+    var t=d.data.timings;P=[['Subuh',t.Fajr],['Dzuhur',t.Dhuhr],['Ashar',t.Asr],['Maghrib',t.Maghrib],['Isya',t.Isha]].map(function(x){return [x[0],x[1].slice(0,5)]});tick()}).catch(function(){wxT=0})}
+// ---- dock & daftar aplikasi ----
+var APPS=[];try{APPS=JSON.parse(A.apps())}catch(e){}
+var AP={};APPS.forEach(function(a){AP[a.p]=a});
+var dk=['com.google.android.apps.maps','com.spotify.music','com.google.android.youtube','__all'],ed=false,MAXD=6,pm=false;
+try{var sv=JSON.parse(localStorage.getItem('dock2'));if(Array.isArray(sv)&&sv.length)dk=sv;var sm=+localStorage.getItem('dockmax2');if(sm>=2&&sm<=8)MAXD=sm}catch(e){}
+MAXD=Math.max(MAXD,dk.length);
+function sd(){try{localStorage.setItem('dock2',JSON.stringify(dk));localStorage.setItem('dockmax2',MAXD)}catch(e){}}
+function tile(p,x){var a=AP[p],all=p==='__all';if(!a&&!all)return '';
+  var ic=all?'<i style="background:#3a4658">▦</i>':'<i><img src="data:image/png;base64,'+a.i+'"></i>';
+  return '<div class="app" data-p="'+esc(p)+'">'+(x&&!all?'<u class="x">−</u>':'')+ic+(all?'All apps':esc(a.n))+'</div>'}
+function rd(){var h=dk.map(function(p){return tile(p,ed)}).join('');
+  if(ed&&dk.length<MAXD)h+='<div class="app add"><i>+</i>Tambah</div>';
+  $('dock').innerHTML=h;$('edb').textContent=ed?'✔ Selesai':'✎ Atur dock';$('mx').style.display=ed?'flex':'none';$('mv').textContent='Maks '+MAXD}
+function drawer(pick){pm=pick;$('gr').innerHTML=APPS.filter(function(a){return !pick||dk.indexOf(a.p)<0}).map(function(a){return tile(a.p,false)}).join('');$('drw').style.display='block'}
+$('edb').onclick=function(){ed=!ed;rd()};
+$('mm').onclick=function(){if(MAXD>Math.max(2,dk.length)){MAXD--;sd();rd()}};
+$('mp').onclick=function(){if(MAXD<8){MAXD++;sd();rd()}};
+$('dock').onclick=function(e){var t=e.target.closest('.app');if(!t)return;
+  if(t.classList.contains('add')){drawer(true);return}
+  var p=t.dataset.p;
+  if(ed){if(e.target.classList.contains('x')){dk.splice(dk.indexOf(p),1);sd();rd()}return}
+  if(p==='__all')drawer(false);else A.launch(p)};
+$('drw').onclick=function(e){var t=e.target.closest('.app');
+  if(t){var p=t.dataset.p;if(pm){if(dk.length<MAXD){dk.push(p);sd();rd()}}else A.launch(p)}
+  $('drw').style.display='none'};
+rd();
+// ---- widget musik: data dari aplikasi yang sedang memutar ----
+function onMedia(j){var on=j&&(j.t||j.pkg),a=on&&AP[j.pkg];
+  if(!on){$('mi').textContent='🎵';$('mi').style.background='#3a4658';$('mt').textContent='Tidak ada musik';
+    var ok=true;try{ok=A.hasAccess()}catch(e){}
+    $('ms').textContent=ok?'Putar musik di aplikasi apa pun':'Ketuk ikon untuk izinkan akses media';$('pp').textContent='▶';return}
+  $('mi').innerHTML=a?'<img src="data:image/png;base64,'+a.i+'" style="width:100%;height:100%;border-radius:1.8cqw">':'🎵';
+  $('mi').style.background=a?'transparent':'#3a4658';
+  $('mt').textContent=j.t||j.app;$('ms').textContent=(j.a?j.a+' · ':'')+j.app;$('pp').textContent=j.p?'❚❚':'▶'}
+$('mi').onclick=function(){try{if(!A.hasAccess())A.openAccess()}catch(e){}};
+$('pp').onclick=function(){try{A.play()}catch(e){}};
+$('nx').onclick=function(){try{A.next()}catch(e){}};
+$('pv').onclick=function(){try{A.prev()}catch(e){}};
+</script></body></html>
